@@ -42,7 +42,8 @@ class Application():
         self.queue = Queue()
 
     def on_close(self):
-        self.checker.quit()
+        if self.checker is not None:
+            self.checker.quit()
         self.root.destroy()
 
     def create_widgets(self):
