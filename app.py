@@ -35,17 +35,15 @@ class Application():
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("On-site diagnostics")
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.status_widgets = {}
         self.create_widgets()
         self.checker = None
         self.queue = Queue()
 
-    def end_threads_and_quit(self):
-        try:
-            self.checker.quit = True
-        except:
-            pass
-        self.root.quit()
+    def on_close(self):
+        self.checker.quit()
+        self.root.destroy()
 
     def create_widgets(self):
         # Initialize frames
@@ -53,10 +51,8 @@ class Application():
         self.status_frame = tk.Frame(self.root)
 
         # button_frame widgets
-        self.quit_button = tk.Button(self.button_frame, text='Quit', command=self.end_threads_and_quit)
         self.do_checks_button = tk.Button(self.button_frame, text='Check ports!', command=self.do_checks)
 
-        self.quit_button.grid(row=0, column=0)
         self.do_checks_button.grid(row=0, column=1)
 
         self.host_entry_label = tk.Label(self.button_frame, text="Host: ")
@@ -103,7 +99,7 @@ class Application():
                 relief=tk.FLAT,
                 width=60,
                 height=2,
-                raplength=400,
+                wraplength=400,
             )
             status.grid(row=r, column=2, pady=(1,0))
             self.status_widgets[port] = status
@@ -154,7 +150,7 @@ class PortChecker(threading.Thread):
         threading.Thread.__init__(self, daemon=daemon)
         self.host = host
         self.queue = queue
-        self.quit = False
+        self.q = False
 
     def run(self):
         """
@@ -165,10 +161,14 @@ class PortChecker(threading.Thread):
         """
         self.check_all_sockets(self.host)
 
+    def quit(self):
+        print("quitting!")
+        self.q = True
+
     def check_all_sockets(self, host):
         for port, description in REQUIRED_PORTS:
-            if self.quit:
-                return
+            if self.q:
+                break
             error = None
             print("Checking port {}... ".format(port), end='', flush=True)
             self.queue.put((
