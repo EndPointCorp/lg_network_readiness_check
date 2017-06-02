@@ -101,7 +101,9 @@ class Application():
                 self.status_frame,
                 bg='grey',
                 relief=tk.FLAT,
-                width=40,
+                width=60,
+                height=2,
+                raplength=400,
             )
             status.grid(row=r, column=2, pady=(1,0))
             self.status_widgets[port] = status
@@ -140,7 +142,7 @@ class Application():
                 widget.config(text='Open!',
                               bg = 'green')
             else:
-                widget.config(text='Port closed - (Error {})'.format(p[PORT_STATUS]),
+                widget.config(text='Port closed ({})'.format(p[PORT_STATUS]),
                               bg = 'red')
         except Empty:
             pass
