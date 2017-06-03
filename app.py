@@ -36,8 +36,8 @@ REQUIRED_PORTS = (
 class Application():
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("On-site diagnostics")
-        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+        self.root.title('On-site diagnostics')
+        self.root.protocol('WM_DELETE_WINDOW', self.on_close)
         self.status_widgets = {}
         self.create_widgets()
         self.checker = None
@@ -77,45 +77,45 @@ class Application():
             self.status_frame,
             text='Port',
             width=6,
-            anchor="w",
-        ).grid(row=0, column=0, sticky="nesw")
+            anchor='w',
+        ).grid(row=0, column=0, sticky='nesw')
         tk.Label(
             self.status_frame,
             text='Description',
             width=30,
-            anchor="w",
-        ).grid(row=0, column=1, sticky="nesw")
+            anchor='w',
+        ).grid(row=0, column=1, sticky='nesw')
         tk.Label(
             self.status_frame,
             text='Host',
             width=10,
-            anchor="w"
-        ).grid(row=0, column=2, sticky="nesw")
+            anchor='w'
+        ).grid(row=0, column=2, sticky='nesw')
         tk.Label(
             self.status_frame,
             text='Status',
             width=8,
-            anchor="w",
-        ).grid(row=0, column=3, sticky="nesw")
+            anchor='w',
+        ).grid(row=0, column=3, sticky='nesw')
         r = 1
         for port, description, host in REQUIRED_PORTS:
             tk.Label(
                 self.status_frame,
                 text=str(port),
-                anchor="w",
-            ).grid(row=r, column=0, sticky="nesw")
+                anchor='w',
+            ).grid(row=r, column=0, sticky='nesw')
             tk.Label(
                 self.status_frame,
                 text=description,
-                anchor="w",
-            ).grid(row=r, column=1, sticky="nesw")
+                anchor='w',
+            ).grid(row=r, column=1, sticky='nesw')
 
             self.hosts[port] = tk.StringVar()
             self.hosts[port].set(DEFAULT_HOST if host is None else host)
             tk.Entry(
                 self.status_frame,
                 textvariable=self.hosts[port],
-            ).grid(row=r, column=2, stick="nesw")
+            ).grid(row=r, column=2, stick='nesw')
 
             status = tk.Label(
                 self.status_frame,
@@ -130,8 +130,8 @@ class Application():
             r += 1
 
         # Pack frames
-        self.button_frame.pack(fill="x")
-        self.status_frame.pack(fill="x")
+        self.button_frame.pack(fill='x')
+        self.status_frame.pack(fill='x')
 
         self.status_frame.grid_columnconfigure(0, weight=1)
         self.status_frame.grid_columnconfigure(1, weight=1)
@@ -189,7 +189,7 @@ class PortChecker(threading.Thread):
         self.check_all_sockets()
 
     def quit(self):
-        print("quitting!")
+        print('quitting!')
         self.q = True
 
     def check_all_sockets(self):
@@ -197,7 +197,7 @@ class PortChecker(threading.Thread):
             if self.q:
                 break
             error = None
-            print("Checking port {}... ".format(port), end='', flush=True)
+            print('Checking port {}... '.format(port), end='', flush=True)
             self.queue.put((
                 port,
                 STATUS_RUNNING
@@ -212,7 +212,7 @@ class PortChecker(threading.Thread):
                 error = self.check_socket(self.hosts[port].get(), port)
 
             if error:
-                print("This port seems to be closed. Error number: {}".format(error))
+                print('This port seems to be closed. Error number: {}'.format(error))
                 self.queue.put((
                     port,
                     error
@@ -222,7 +222,7 @@ class PortChecker(threading.Thread):
                     port,
                     STATUS_SUCCESS
                 ))
-                print("open!")
+                print('open!')
 
         self.queue.put((0, STATUS_FINISHED))
 
