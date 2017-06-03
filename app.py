@@ -42,9 +42,13 @@ class Application():
         self.queue = Queue()
 
     def on_close(self):
+        self.cancel()
+        self.root.destroy()
+
+    def cancel(self):
+        self.cancel_button.config(state=tk.DISABLED, text='Canceling...')
         if self.checker is not None:
             self.checker.quit()
-        self.root.destroy()
 
     def create_widgets(self):
         # Initialize frames
@@ -53,16 +57,23 @@ class Application():
 
         # button_frame widgets
         self.do_checks_button = tk.Button(self.button_frame, text='Check ports!', command=self.do_checks)
-
         self.do_checks_button.grid(row=0, column=1)
 
+        self.cancel_button = tk.Button(
+            self.button_frame,
+            text='Cancel',
+            command=self.cancel,
+        )
+        self.cancel_button.grid(row=0, column=2)
+        self.cancel_button.grid_remove()
+
         self.host_entry_label = tk.Label(self.button_frame, text="Host: ")
-        self.host_entry_label.grid(row=0, column=2)
+        self.host_entry_label.grid(row=0, column=3)
 
         self.host_variable = tk.StringVar()
         self.host_entry = tk.Entry(self.button_frame, textvariable=self.host_variable)
         self.host_variable.set(HOST)
-        self.host_entry.grid(row=0, column=3)
+        self.host_entry.grid(row=0, column=4)
 
         # status_frame widgets
         tk.Label(
@@ -120,6 +131,7 @@ class Application():
             status.config(bg='grey')
         self.checker = PortChecker(self.queue, daemon=True, host=self.host_variable.get())
         self.checker.start()
+        self.cancel_button.grid()
         self.root.after(100, self.check_for_updates)
 
     def check_for_updates(self):
@@ -129,6 +141,8 @@ class Application():
             if p[PORT_STATUS] is STATUS_FINISHED:
                 self.checker = None
                 self.do_checks_button.config(state=tk.NORMAL)
+                self.cancel_button.config(state=tk.NORMAL)
+                self.cancel_button.grid_remove()
                 return
 
             widget = self.status_widgets.get(p[PORT_NUMBER])
