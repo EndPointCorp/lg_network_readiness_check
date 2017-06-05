@@ -34,7 +34,7 @@ REQUIRED_PORTS = (
 class Application():
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title('On-site diagnostics')
+        self.root.title('Liquid Galaxy Network Diagnostics Tool')
         self.root.protocol('WM_DELETE_WINDOW', self.on_close)
         self.status_widgets = {}
         self.create_widgets()
