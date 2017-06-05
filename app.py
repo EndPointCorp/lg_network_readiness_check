@@ -8,8 +8,6 @@ import threading
 
 NTP_PORT = 123
 SOCKET_TIMEOUT = 10
-DEFAULT_HOST = '127.0.0.1'
-#DEFAULT_HOST = '35.185.244.33'
 
 PORT_NUMBER = 0
 PORT_STATUS = 1
@@ -20,16 +18,16 @@ STATUS_RUNNING = 'running'
 STATUS_FINISHED = 'finished'
 
 REQUIRED_PORTS = (
-    (22, 'TCP ssh', '35.185.244.33'),
-    (80, 'TCP http', None),
-    (123, 'UDP ntp', None),
-    (443, 'TCP https', None),
-    (3022, 'lol testing', None),
-    (5831, 'TCP portapt', None),
-    (5832, 'TCP portapt', None),
-    (11371, 'PGP public key server', None),
-    (31767, 'TCP zabbix', None),
-    (42873, 'TCP rsync', None),
+    (22,    'Support',                    '127.0.0.1'),
+    (80,    'Web server',                 '127.0.0.1'),
+    (123,   'Clock synchronization',      '127.0.0.1'),
+    (443,   'Secure web server',          '127.0.0.1'),
+    (3022,  'lol testing',                '127.0.0.1'),
+    (5831,  'TCP portapt',                '127.0.0.1'),
+    (5832,  'TCP portapt',                '127.0.0.1'),
+    (11371, 'Secure verification server', '127.0.0.1'),
+    (31767, 'Monitoring',                 '127.0.0.1'),
+    (42873, 'Content synchronization',    '127.0.0.1'),
 )
 
 
@@ -56,6 +54,7 @@ class Application():
         # Initialize frames
         self.button_frame = tk.Frame(self.root)
         self.status_frame = tk.Frame(self.root)
+        self.report_frame = tk.Frame(self.root)
 
         # button_frame widgets
         self.do_checks_button = tk.Button(self.button_frame, text='Check ports!', command=self.do_checks)
@@ -69,55 +68,26 @@ class Application():
         self.cancel_button.grid(row=0, column=2)
         self.cancel_button.grid_remove()
 
-
-        self.hosts = {}
-        self.host_entries = []
-
         # status_frame widgets
-        tk.Label(
-            self.status_frame,
-            text='Port',
-            width=6,
-            anchor='w',
-        ).grid(row=0, column=0, sticky='nesw')
         tk.Label(
             self.status_frame,
             text='Description',
             width=30,
             anchor='w',
-        ).grid(row=0, column=1, sticky='nesw')
-        tk.Label(
-            self.status_frame,
-            text='Host',
-            width=10,
-            anchor='w'
-        ).grid(row=0, column=2, sticky='nesw')
+        ).grid(row=0, column=0, sticky='nesw')
         tk.Label(
             self.status_frame,
             text='Status',
             width=8,
             anchor='w',
-        ).grid(row=0, column=3, sticky='nesw')
+        ).grid(row=0, column=1, sticky='nesw')
         r = 1
         for port, description, host in REQUIRED_PORTS:
             tk.Label(
                 self.status_frame,
-                text=str(port),
-                anchor='w',
-            ).grid(row=r, column=0, sticky='nesw')
-            tk.Label(
-                self.status_frame,
                 text=description,
                 anchor='w',
-            ).grid(row=r, column=1, sticky='nesw')
-
-            self.hosts[port] = tk.StringVar()
-            self.hosts[port].set(DEFAULT_HOST if host is None else host)
-            self.host_entries.append(tk.Entry(
-                self.status_frame,
-                textvariable=self.hosts[port],
-            ))
-            self.host_entries[-1].grid(row=r, column=2, stick='nesw')
+            ).grid(row=r, column=0, sticky='nesw')
 
             status = tk.Label(
                 self.status_frame,
@@ -127,13 +97,14 @@ class Application():
                 height=2,
                 wraplength=400,
             )
-            status.grid(row=r, column=3, pady=(1,0))
+            status.grid(row=r, column=1, pady=(1,0))
             self.status_widgets[port] = status
             r += 1
 
         # Pack frames
         self.button_frame.pack(fill='x')
         self.status_frame.pack(fill='x')
+        self.report_frame.pack(fill='x')
 
         self.status_frame.grid_columnconfigure(0, weight=1)
         self.status_frame.grid_columnconfigure(1, weight=1)
@@ -145,7 +116,7 @@ class Application():
             e.config(state=tk.DISABLED)
         for status in self.status_widgets.values():
             status.config(bg='grey')
-        self.checker = PortChecker(self.hosts, self.queue, daemon=True)
+        self.checker = PortChecker(self.queue, daemon=True)
         self.checker.start()
         self.cancel_button.grid()
         self.root.after(100, self.check_for_updates)
@@ -155,12 +126,19 @@ class Application():
             p = self.queue.get(0)
 
             if p[PORT_STATUS] is STATUS_FINISHED:
+                report = self.checker.report
                 self.checker = None
                 self.do_checks_button.config(state=tk.NORMAL)
                 self.cancel_button.config(state=tk.NORMAL)
                 for e in self.host_entries:
                     e.config(state=tk.NORMAL)
                 self.cancel_button.grid_remove()
+                self.report_box = tk.Text(
+                    self.report_frame,
+                )
+                self.report_box.insert(tk.END, report)
+                self.report_box.config(state=tk.DISABLED)
+                self.report_box.pack()
                 return
 
             widget = self.status_widgets.get(p[PORT_NUMBER])
@@ -179,9 +157,10 @@ class Application():
 
 
 class PortChecker(threading.Thread):
-    def __init__(self, hosts, queue, daemon=False):
+    report = ""
+
+    def __init__(self, queue, daemon=False):
         threading.Thread.__init__(self, daemon=daemon)
-        self.hosts = hosts
         self.queue = queue
         self.q = False
 
@@ -192,18 +171,19 @@ class PortChecker(threading.Thread):
         Return a list of tuples with the port number and a True or False value
         indicating whether or not it is open.
         """
+        self.report = "Starting port scan...\n"
         self.check_all_sockets()
 
     def quit(self):
-        print('quitting!')
+        self.report += "Quitting!\n"
         self.q = True
 
     def check_all_sockets(self):
-        for port, description, default_host in REQUIRED_PORTS:
+        for port, description, host in REQUIRED_PORTS:
             if self.q:
                 break
             error = None
-            print('Checking port {}... '.format(port), end='', flush=True)
+            self.report += "Checking port {}... ".format(port)
             self.queue.put((
                 port,
                 STATUS_RUNNING
@@ -211,14 +191,14 @@ class PortChecker(threading.Thread):
             if port == NTP_PORT:
                 c = ntplib.NTPClient()
                 try:
-                    response = c.request(self.hosts[port].get())
+                    response = c.request(host, port)
                 except Exception as e:
                     error = e
             else:
-                error = self.check_socket(self.hosts[port].get(), port)
+                error = self.check_socket(host, port)
 
             if error:
-                print('This port seems to be closed. Error number: {}'.format(error))
+                self.report += "This port seems to be closed. Error: {}\n".format(error)
                 self.queue.put((
                     port,
                     error
@@ -228,7 +208,7 @@ class PortChecker(threading.Thread):
                     port,
                     STATUS_SUCCESS
                 ))
-                print('open!')
+                self.report += 'open!\n'
 
         self.queue.put((0, STATUS_FINISHED))
 
