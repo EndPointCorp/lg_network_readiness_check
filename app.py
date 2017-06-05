@@ -112,8 +112,6 @@ class Application():
     def do_checks(self):
         if self.checker is not None: return
         self.do_checks_button.config(state=tk.DISABLED)
-        for e in self.host_entries:
-            e.config(state=tk.DISABLED)
         for status in self.status_widgets.values():
             status.config(bg='grey')
         self.checker = PortChecker(self.queue, daemon=True)
@@ -130,8 +128,6 @@ class Application():
                 self.checker = None
                 self.do_checks_button.config(state=tk.NORMAL)
                 self.cancel_button.config(state=tk.NORMAL)
-                for e in self.host_entries:
-                    e.config(state=tk.NORMAL)
                 self.cancel_button.grid_remove()
                 self.report_box = tk.Text(
                     self.report_frame,
