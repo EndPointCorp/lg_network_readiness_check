@@ -62,6 +62,15 @@ class Application():
         self.status_frame = tk.Frame(self.root)
         self.report_frame = tk.Frame(self.root)
 
+        # End Point logo
+        logo = tk.PhotoImage(file='logo-large.png')
+        label = tk.Label(
+            self.root,
+            image=logo
+        )
+        label.image = logo
+        label.pack()
+
         # button_frame widgets
         self.do_checks_button = tk.Button(self.button_frame, text='Run diagnostics', command=self.do_checks)
         self.do_checks_button.grid(row=0, column=1)
