@@ -101,6 +101,16 @@ class Application():
             self.status_widgets[port] = status
             r += 1
 
+        self.copy_button = tk.Button(
+            self.report_frame,
+            text='Copy to clipboard',
+            command=self.copy_to_clipboard,
+        )
+        self.report_box = tk.Text(
+            self.report_frame,
+            state=tk.DISABLED,
+        )
+
         # Pack frames
         self.button_frame.pack(fill='x')
         self.status_frame.pack(fill='x')
@@ -108,6 +118,10 @@ class Application():
 
         self.status_frame.grid_columnconfigure(0, weight=1)
         self.status_frame.grid_columnconfigure(1, weight=1)
+
+    def copy_to_clipboard(self):
+        self.root.clipboard_append(self.report_box.get('1.0', tk.END))
+        self.root.update()
 
     def do_checks(self):
         if self.checker is not None: return
@@ -118,6 +132,10 @@ class Application():
         self.checker.start()
         self.cancel_button.grid()
         self.root.after(100, self.check_for_updates)
+        if self.report_box is not None:
+            self.report_box.config(state=tk.NORMAL)
+            self.report_box.delete('1.0', tk.END)
+            self.report_box.config(state=tk.DISABLED)
 
     def check_for_updates(self):
         try:
@@ -129,12 +147,11 @@ class Application():
                 self.do_checks_button.config(state=tk.NORMAL)
                 self.cancel_button.config(state=tk.NORMAL)
                 self.cancel_button.grid_remove()
-                self.report_box = tk.Text(
-                    self.report_frame,
-                )
+                self.report_box.config(state=tk.NORMAL)
                 self.report_box.insert(tk.END, report)
                 self.report_box.config(state=tk.DISABLED)
                 self.report_box.pack()
+                self.copy_button.pack(side=tk.RIGHT)
                 return
 
             widget = self.status_widgets.get(p[PORT_NUMBER])
