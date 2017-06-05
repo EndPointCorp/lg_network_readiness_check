@@ -71,6 +71,7 @@ class Application():
 
 
         self.hosts = {}
+        self.host_entries = []
 
         # status_frame widgets
         tk.Label(
@@ -112,10 +113,11 @@ class Application():
 
             self.hosts[port] = tk.StringVar()
             self.hosts[port].set(DEFAULT_HOST if host is None else host)
-            tk.Entry(
+            self.host_entries.append(tk.Entry(
                 self.status_frame,
                 textvariable=self.hosts[port],
-            ).grid(row=r, column=2, stick='nesw')
+            ))
+            self.host_entries[-1].grid(row=r, column=2, stick='nesw')
 
             status = tk.Label(
                 self.status_frame,
@@ -139,6 +141,8 @@ class Application():
     def do_checks(self):
         if self.checker is not None: return
         self.do_checks_button.config(state=tk.DISABLED)
+        for e in self.host_entries:
+            e.config(state=tk.DISABLED)
         for status in self.status_widgets.values():
             status.config(bg='grey')
         self.checker = PortChecker(self.hosts, self.queue, daemon=True)
@@ -154,6 +158,8 @@ class Application():
                 self.checker = None
                 self.do_checks_button.config(state=tk.NORMAL)
                 self.cancel_button.config(state=tk.NORMAL)
+                for e in self.host_entries:
+                    e.config(state=tk.NORMAL)
                 self.cancel_button.grid_remove()
                 return
 
