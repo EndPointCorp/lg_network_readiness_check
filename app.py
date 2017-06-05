@@ -40,6 +40,7 @@ class Application():
         self.create_widgets()
         self.checker = None
         self.queue = Queue()
+        self.root.iconbitmap('logo-small.ico')
 
     def on_close(self):
         self.cancel()
