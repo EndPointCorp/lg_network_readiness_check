@@ -57,7 +57,7 @@ class Application():
         self.report_frame = tk.Frame(self.root)
 
         # button_frame widgets
-        self.do_checks_button = tk.Button(self.button_frame, text='Check ports!', command=self.do_checks)
+        self.do_checks_button = tk.Button(self.button_frame, text='Run diagnostics', command=self.do_checks)
         self.do_checks_button.grid(row=0, column=1)
 
         self.cancel_button = tk.Button(
@@ -159,10 +159,10 @@ class Application():
             if p[PORT_STATUS] is STATUS_RUNNING:
                 widget.config(text='Checking port...')
             elif p[PORT_STATUS] is STATUS_SUCCESS:
-                widget.config(text='Open!',
+                widget.config(text='Connection succeeded!',
                               bg = 'green')
             else:
-                widget.config(text='Port closed ({})'.format(p[PORT_STATUS]),
+                widget.config(text='Connection failed ({})'.format(p[PORT_STATUS]),
                               bg = 'red')
         except Empty:
             pass
@@ -184,7 +184,7 @@ class PortChecker(threading.Thread):
         Return a list of tuples with the port number and a True or False value
         indicating whether or not it is open.
         """
-        self.report = "Starting port scan...\n"
+        self.report = "Starting checks...\n"
         self.check_all_sockets()
 
     def quit(self):
@@ -196,7 +196,7 @@ class PortChecker(threading.Thread):
             if self.q:
                 break
             error = None
-            self.report += "Checking port {}... ".format(port)
+            self.report += "Checking connection to {}:{}... ".format(host, port)
             self.queue.put((
                 port,
                 STATUS_RUNNING
@@ -211,7 +211,7 @@ class PortChecker(threading.Thread):
                 error = self.check_socket(host, port)
 
             if error:
-                self.report += "This port seems to be closed. Error: {}\n".format(error)
+                self.report += "Connection failed. Error: {}\n".format(error)
                 self.queue.put((
                     port,
                     error
@@ -221,7 +221,7 @@ class PortChecker(threading.Thread):
                     port,
                     STATUS_SUCCESS
                 ))
-                self.report += 'open!\n'
+                self.report += 'successful!\n'
 
         self.queue.put((0, STATUS_FINISHED))
 
