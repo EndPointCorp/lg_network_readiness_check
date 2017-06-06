@@ -10,24 +10,25 @@ NTP_PORT = 123
 SOCKET_TIMEOUT = 10
 
 PORT_NUMBER = 0
-PORT_STATUS = 1
+PORT_DESC = 1
 PORT_HOST = 2
+PORT_DETAILS = 3
 
 STATUS_SUCCESS = 'success'
 STATUS_RUNNING = 'running'
 STATUS_FINISHED = 'finished'
 
 REQUIRED_PORTS = (
-    (22,    'Support',                    '127.0.0.1'),
-    (80,    'Web server',                 '127.0.0.1'),
-    (123,   'Clock synchronization',      '127.0.0.1'),
-    (443,   'Secure web server',          '127.0.0.1'),
-    (3022,  'lol testing',                '127.0.0.1'),
-    (5831,  'TCP portapt',                '127.0.0.1'),
-    (5832,  'TCP portapt',                '127.0.0.1'),
-    (11371, 'Secure verification server', '127.0.0.1'),
-    (31767, 'Monitoring',                 '127.0.0.1'),
-    (42873, 'Content synchronization',    '127.0.0.1'),
+    (22,    'Support',                    '127.0.0.1', 'TCP ssh'),
+    (80,    'Web server',                 '127.0.0.1', 'TCP http'),
+    (123,   'Clock synchronization',      '127.0.0.1', 'UDP ntp'),
+    (443,   'Secure web server',          '127.0.0.1', 'TCP https'),
+    (3022,  'lol testing',                '127.0.0.1', ''),
+    (5831,  'TCP portapt',                '127.0.0.1', 'TCP portapt'),
+    (5832,  'TCP portapt',                '127.0.0.1', 'TCP portapt'),
+    (11371, 'Secure verification server', '127.0.0.1', 'PGP public key server'),
+    (31767, 'Monitoring',                 '127.0.0.1', 'TCP zabbix'),
+    (42873, 'Content synchronization',    '127.0.0.1', 'TCP rsync'),
 )
 
 
@@ -97,7 +98,7 @@ class Application():
             anchor='w',
         ).grid(row=0, column=1, sticky='nesw')
         r = 1
-        for port, description, host in REQUIRED_PORTS:
+        for port, description, host, details in REQUIRED_PORTS:
             tk.Label(
                 self.status_frame,
                 text=description,
@@ -156,7 +157,7 @@ class Application():
         try:
             p = self.queue.get(0)
 
-            if p[PORT_STATUS] is STATUS_FINISHED:
+            if p[PORT_DESC] is STATUS_FINISHED:
                 report = self.checker.report
                 self.checker = None
                 self.do_checks_button.config(state=tk.NORMAL)
@@ -171,13 +172,13 @@ class Application():
 
             widget = self.status_widgets.get(p[PORT_NUMBER])
 
-            if p[PORT_STATUS] is STATUS_RUNNING:
-                widget.config(text='Checking port...')
-            elif p[PORT_STATUS] is STATUS_SUCCESS:
+            if p[PORT_DESC] is STATUS_RUNNING:
+                widget.config(text='Attempting to connect...')
+            elif p[PORT_DESC] is STATUS_SUCCESS:
                 widget.config(text='Connection succeeded!',
                               bg = 'green')
             else:
-                widget.config(text='Connection failed ({})'.format(p[PORT_STATUS]),
+                widget.config(text='Connection failed ({})'.format(p[PORT_DESC]),
                               bg = 'red')
         except Empty:
             pass
@@ -207,11 +208,11 @@ class PortChecker(threading.Thread):
         self.q = True
 
     def check_all_sockets(self):
-        for port, description, host in REQUIRED_PORTS:
+        for port, description, host, details in REQUIRED_PORTS:
             if self.q:
                 break
             error = None
-            self.report += "Checking connection to {}:{}... ".format(host, port)
+            self.report += "Checking connection to {}:{} ({})... ".format(host, port, details)
             self.queue.put((
                 port,
                 STATUS_RUNNING
