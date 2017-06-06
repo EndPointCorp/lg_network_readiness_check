@@ -4,6 +4,7 @@ from queue import Queue, Empty
 import socket
 import tkinter as tk
 import threading
+import webbrowser
 
 
 NTP_PORT = 123
@@ -69,6 +70,7 @@ class Application():
             self.root,
             image=logo
         )
+        label.bind('<Button-1>', self.goto_ep)
         label.image = logo
         label.pack()
 
@@ -134,6 +136,9 @@ class Application():
 
         self.status_frame.grid_columnconfigure(0, weight=1)
         self.status_frame.grid_columnconfigure(1, weight=1)
+
+    def goto_ep(self, event):
+        webbrowser.open_new('https://liquidgalaxy.endpoint.com/')
 
     def copy_to_clipboard(self):
         self.root.clipboard_append(self.report_box.get('1.0', tk.END))
