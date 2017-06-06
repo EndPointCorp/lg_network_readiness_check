@@ -24,7 +24,6 @@ REQUIRED_PORTS = (
     (80,    'Web server',                 '127.0.0.1', 'TCP http'),
     (123,   'Clock synchronization',      '127.0.0.1', 'UDP ntp'),
     (443,   'Secure web server',          '127.0.0.1', 'TCP https'),
-    (3022,  'lol testing',                '127.0.0.1', ''),
     (5831,  'TCP portapt',                '127.0.0.1', 'TCP portapt'),
     (5832,  'TCP portapt',                '127.0.0.1', 'TCP portapt'),
     (11371, 'Secure verification server', '127.0.0.1', 'PGP public key server'),
