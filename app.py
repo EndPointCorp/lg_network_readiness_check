@@ -161,7 +161,7 @@ class Application():
                 report = self.checker.report
                 self.checker = None
                 self.do_checks_button.config(state=tk.NORMAL)
-                self.cancel_button.config(state=tk.NORMAL)
+                self.cancel_button.config(state=tk.NORMAL, text='Cancel')
                 self.cancel_button.grid_remove()
                 self.report_box.config(state=tk.NORMAL)
                 self.report_box.insert(tk.END, report)
